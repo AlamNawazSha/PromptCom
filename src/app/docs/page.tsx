@@ -121,7 +121,7 @@ export default function DocsPage() {
                 <h2 className="text-xl sm:text-2xl font-black text-white font-mono print:text-black">
                   1. PRODUCT REQUIREMENTS DOCUMENT (PRD)
                 </h2>
-                <p className="text-xs font-mono text-slate-400 print:text-gray-600">ScamShield AI — "Detect the red flags before they cost you."</p>
+                <p className="text-xs font-mono text-slate-400 print:text-gray-600">ScamShield AI — &quot;Detect the red flags before they cost you.&quot;</p>
               </div>
             </div>
 
@@ -131,7 +131,7 @@ export default function DocsPage() {
                   <Target className="w-4 h-4 text-cyan-400 print:hidden" /> 1.1 Executive Overview & Problem Statement
                 </h3>
                 <p>
-                  Job seekers, renters, and vulnerable users lose millions of dollars annually to advance-fee scams that bypass conventional spam filters. Counterfeit employment appointment letters demand ₹15,000–₹50,000 for "onboarding equipment" or "mandatory registration", while rental deposit traps pressure victims to transfer funds before viewing apartments.
+                  Job seekers, renters, and vulnerable users lose millions of dollars annually to advance-fee scams that bypass conventional spam filters. Counterfeit employment appointment letters demand ₹15,000–₹50,000 for &quot;onboarding equipment&quot; or &quot;mandatory registration&quot;, while rental deposit traps pressure victims to transfer funds before viewing apartments.
                 </p>
                 <p className="mt-2">
                   <strong>ScamShield AI</strong> provides a multi-phase digital inspection platform that calculates a dynamic, explainable <strong>Scam Threat Index (0–100%)</strong> with cited evidence and actionable crisis advisories.
@@ -261,7 +261,7 @@ export default function DocsPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Zero-Fabrication Guarantee:</strong> If RDAP or WHOIS data is unavailable, the system renders "Domain age unavailable" instead of generating fabricated data.</span>
+                    <span><strong>Zero-Fabrication Guarantee:</strong> If RDAP or WHOIS data is unavailable, the system renders &quot;Domain age unavailable&quot; instead of generating fabricated data.</span>
                   </li>
                 </ul>
               </div>

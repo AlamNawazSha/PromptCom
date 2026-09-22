@@ -85,6 +85,9 @@ export function Navbar() {
           <div className="relative">
             <button
               onClick={() => setStatusOpen(!statusOpen)}
+              aria-expanded={statusOpen}
+              aria-haspopup="dialog"
+              aria-label="Toggle system subsystems status modal"
               className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-mono text-emerald-400 hover:bg-emerald-500/20 transition-all"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>

@@ -121,7 +121,7 @@ export function ScanResultView({ result, onReset }: ScanResultViewProps) {
                 Target Evidence Preview:
               </span>
               <p className="text-xs text-slate-300 font-mono italic line-clamp-3">
-                "{result.inputPreview}"
+                &quot;{result.inputPreview}&quot;
               </p>
             </div>
           </div>

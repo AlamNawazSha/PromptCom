@@ -63,9 +63,14 @@ export function UrlScanner({ onScan, isLoading }: UrlScannerProps) {
 
       {/* URL Input Bar */}
       <div className="relative rounded-2xl border border-slate-800 bg-[#080c14]/80 p-2 shadow-inner focus-within:border-cyan-500/50 focus-within:shadow-[0_0_20px_rgba(0,245,255,0.15)] transition-all">
+        <label htmlFor="url-input" className="sr-only">
+          Enter target URL or website address for cybersecurity inspection
+        </label>
         <div className="flex items-center gap-3 px-3">
           <Globe className="h-5 w-5 text-cyan-400 shrink-0" />
           <input
+            id="url-input"
+            aria-label="Enter web address or suspicious link"
             type="text"
             value={url}
             onChange={(e) => {

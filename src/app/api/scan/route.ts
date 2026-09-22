@@ -7,7 +7,8 @@ import { ThreatScoringEngine } from '@/lib/scoring/scoring-engine';
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
 import { hashContent, createSafePreview } from '@/lib/security/input-sanitizer';
 import { prisma } from '@/lib/db/prisma';
-import { ScanResultPayload, VerificationChecklistItem, ThreatScoresBreakdown, ScanFindingItem } from '@/types';
+import { scanResultCache } from '@/lib/cache/memory-cache';
+import { ScanResultPayload, VerificationChecklistItem, ThreatScoresBreakdown, ScanFindingItem, ScanType } from '@/types';
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -56,40 +57,61 @@ export async function POST(req: NextRequest) {
     const contentHash = hashContent(content);
     const safePreview = createSafePreview(content);
 
+    // Fast-path in-memory cache hit
+    const cachedPayload = scanResultCache.get(contentHash) as ScanResultPayload | undefined;
+    if (cachedPayload) {
+      return NextResponse.json(cachedPayload, {
+        headers: {
+          'X-Cache': 'HIT',
+          'X-Response-Time-Ms': String(Date.now() - startTime),
+        },
+      });
+    }
+
     // 2. Stage A: Deterministic Rule Analysis & Entity Extraction
     const ruleAnalyzer = new RuleBasedAnalyzer();
     const ruleOutput = ruleAnalyzer.analyze(content, analysisType);
 
-    // 3. Stage B: Scan for embedded URLs
-    let embeddedUrlRisk = 0;
+    // 3. Stage B & C: Parallelize embedded URL forensics & Gemini semantic AI analysis
     const urlMatches = content.match(/https?:\/\/[^\s"'<>]+/gi) || [];
     const urlAnalyzer = new UrlAnalyzer();
-    const embeddedUrlFindings: ScanFindingItem[] = [];
-
-    if (urlMatches.length > 0) {
-      for (const rawFoundUrl of urlMatches.slice(0, 3)) {
-        try {
-          const urlRes = await urlAnalyzer.analyzeUrl(rawFoundUrl);
-          embeddedUrlRisk = Math.max(embeddedUrlRisk, urlRes.riskScore);
-          embeddedUrlFindings.push(...urlRes.detectedRedFlags);
-        } catch {
-          // If URL validation fails (e.g. SSRF block or invalid syntax), register as anomaly finding
-          embeddedUrlRisk = Math.max(embeddedUrlRisk, 30);
-          embeddedUrlFindings.push({
-            category: 'URL_ANOMALY',
-            severity: 'MEDIUM',
-            title: 'Suspicious or Blocked Embedded Link',
-            evidence: rawFoundUrl,
-            explanation: 'The link contains invalid syntax or targets internal/restricted network addresses.',
-            recommendedAction: 'Do not click on unverified links embedded in messages.',
-          });
-        }
-      }
-    }
-
-    // 4. Stage C: Semantic AI Analysis with Google Gemini (or seamless offline fallback)
     const geminiService = new GeminiAnalysisService();
-    const aiOutput = await geminiService.analyzeText(content, ruleOutput.detectedCategory);
+
+    const [embeddedUrlResults, aiOutput] = await Promise.all([
+      Promise.all(
+        urlMatches.slice(0, 3).map(async (rawFoundUrl) => {
+          try {
+            const urlRes = await urlAnalyzer.analyzeUrl(rawFoundUrl);
+            return {
+              risk: urlRes.riskScore,
+              findings: urlRes.detectedRedFlags,
+            };
+          } catch {
+            return {
+              risk: 30,
+              findings: [
+                {
+                  category: 'URL_ANOMALY' as const,
+                  severity: 'MEDIUM' as const,
+                  title: 'Suspicious or Blocked Embedded Link',
+                  evidence: rawFoundUrl,
+                  explanation: 'The link contains invalid syntax or targets internal/restricted network addresses.',
+                  recommendedAction: 'Do not click on unverified links embedded in messages.',
+                },
+              ],
+            };
+          }
+        })
+      ),
+      geminiService.analyzeText(content, ruleOutput.detectedCategory),
+    ]);
+
+    let embeddedUrlRisk = 0;
+    const embeddedUrlFindings: ScanFindingItem[] = [];
+    for (const r of embeddedUrlResults) {
+      embeddedUrlRisk = Math.max(embeddedUrlRisk, r.risk);
+      embeddedUrlFindings.push(...r.findings);
+    }
 
     // Combine findings from rules, embedded URLs, and AI
     const allFindingsMap = new Map<string, ScanFindingItem>();
@@ -211,7 +233,7 @@ export async function POST(req: NextRequest) {
 
     const payload: ScanResultPayload = {
       id: scanId,
-      scanType: scanType as any,
+      scanType: scanType as ScanType,
       threatScore,
       riskLevel,
       confidence,
@@ -228,17 +250,21 @@ export async function POST(req: NextRequest) {
       verificationChecklist: checklist,
     };
 
+    scanResultCache.set(contentHash, payload);
+
     return NextResponse.json(payload, {
       headers: {
+        'X-Cache': 'MISS',
         'X-Response-Time-Ms': String(Date.now() - startTime),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string };
     console.error('Scan API handler exception:', error);
     return NextResponse.json(
       {
         error: 'An internal error occurred while analyzing the content.',
-        message: error?.message || 'Unknown error',
+        message: err?.message || 'Unknown error',
       },
       { status: 500 }
     );

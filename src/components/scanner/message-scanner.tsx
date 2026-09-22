@@ -83,7 +83,12 @@ export function MessageScanner({ onScan, isLoading }: MessageScannerProps) {
 
       {/* Main Textarea Container */}
       <div className="relative rounded-2xl border border-slate-800 bg-[#080c14]/80 p-1 shadow-inner focus-within:border-cyan-500/50 focus-within:shadow-[0_0_20px_rgba(0,245,255,0.15)] transition-all">
+        <label htmlFor="message-input" className="sr-only">
+          Paste suspicious message, job offer letter, or rental deposit request
+        </label>
         <textarea
+          id="message-input"
+          aria-label="Suspicious message or offer letter text"
           rows={7}
           value={content}
           onKeyDown={(e) => {
@@ -104,8 +109,12 @@ export function MessageScanner({ onScan, isLoading }: MessageScannerProps) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800/80 px-4 py-3 bg-slate-900/40 rounded-b-xl">
           {/* Analysis Type Select */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <span className="text-xs font-mono text-slate-400">Analysis Mode:</span>
+            <label htmlFor="analysis-mode" className="text-xs font-mono text-slate-400">
+              Analysis Mode:
+            </label>
             <select
+              id="analysis-mode"
+              aria-label="Select analysis mode"
               value={analysisType}
               onChange={(e) => setAnalysisType(e.target.value)}
               className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-mono text-cyan-300 focus:border-cyan-500 focus:outline-none"

@@ -1,3 +1,5 @@
+import { brandCheckCache } from '../cache/memory-cache';
+
 export interface BrandTarget {
   name: string;
   primaryDomain: string;
@@ -24,34 +26,41 @@ export const MONITORED_BRANDS: BrandTarget[] = [
 ];
 
 /**
- * Calculates Levenshtein edit distance between two strings
+ * Calculates Levenshtein edit distance between two strings with O(N) memory efficiency
  */
 export function levenshteinDistance(a: string, b: string): number {
   const an = a ? a.length : 0;
   const bn = b ? b.length : 0;
   if (an === 0) return bn;
   if (bn === 0) return an;
-  const matrix: number[][] = [];
-  for (let i = 0; i <= bn; ++i) {
-    matrix[i] = [i];
+
+  let prev = new Array(an + 1);
+  let curr = new Array(an + 1);
+
+  for (let j = 0; j <= an; j++) {
+    prev[j] = j;
   }
-  for (let i = 0; i <= an; ++i) {
-    matrix[0][i] = i;
-  }
-  for (let i = 1; i <= bn; ++i) {
-    for (let j = 1; j <= an; ++j) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
+
+  for (let i = 1; i <= bn; i++) {
+    curr[0] = i;
+    const bChar = b.charAt(i - 1);
+    for (let j = 1; j <= an; j++) {
+      if (bChar === a.charAt(j - 1)) {
+        curr[j] = prev[j - 1];
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+        curr[j] = Math.min(
+          prev[j - 1] + 1, // substitution
+          curr[j - 1] + 1, // insertion
+          prev[j] + 1     // deletion
         );
       }
     }
+    const temp = prev;
+    prev = curr;
+    curr = temp;
   }
-  return matrix[bn][an];
+
+  return prev[an];
 }
 
 /**
@@ -79,10 +88,23 @@ export interface BrandMatchResult {
 }
 
 /**
- * Detects whether a given domain is potentially impersonating a recognized high-profile brand
+ * Detects whether a given domain is potentially impersonating a recognized high-profile brand.
+ * Results are cached in-memory for instant repeat evaluations.
  */
 export function detectBrandImpersonation(domain: string): BrandMatchResult {
   const cleanDomain = domain.toLowerCase().trim();
+
+  // Check cache first
+  const cached = brandCheckCache.get(cleanDomain) as BrandMatchResult | undefined;
+  if (cached) {
+    return cached;
+  }
+
+  let result: BrandMatchResult = {
+    hasMismatch: false,
+    matchedBrand: null,
+    targetDomain: null,
+  };
 
   for (const brand of MONITORED_BRANDS) {
     // If the domain exactly ends with the legitimate primary domain, it is genuine
@@ -100,47 +122,53 @@ export function detectBrandImpersonation(domain: string): BrandMatchResult {
       if (
         normalizedBase.includes(alias) &&
         normalizedBase !== alias &&
-        (normalizedBase.includes('-') || normalizedBase.includes('login') || normalizedBase.includes('verify') || normalizedBase.includes('support'))
+        (normalizedBase.includes('-') ||
+          normalizedBase.includes('login') ||
+          normalizedBase.includes('verify') ||
+          normalizedBase.includes('support'))
       ) {
-        return {
+        result = {
           hasMismatch: true,
           matchedBrand: brand.name,
           targetDomain: brand.primaryDomain,
           similarityType: 'SUBDOMAIN_PREPEND',
           explanation: `Potential brand mismatch detected: The domain '${cleanDomain}' includes '${alias}' combined with security/login keywords, but does not belong to ${brand.name} (${brand.primaryDomain}).`,
         };
+        brandCheckCache.set(cleanDomain, result);
+        return result;
       }
 
       // 2. Leetspeak substitution (e.g., paypa1, micros0ft, goog1e)
       if (normalizedBase === alias && baseDomain !== alias) {
-        return {
+        result = {
           hasMismatch: true,
           matchedBrand: brand.name,
           targetDomain: brand.primaryDomain,
           similarityType: 'LEETSPEAK',
           explanation: `Potential brand mismatch detected: The domain '${cleanDomain}' uses character substitution lookalikes (e.g., '${baseDomain}' for '${alias}') mimicking ${brand.name}.`,
         };
+        brandCheckCache.set(cleanDomain, result);
+        return result;
       }
 
       // 3. Edit distance check (distance of 1 with length >= 5)
       if (alias.length >= 5) {
         const distance = levenshteinDistance(baseDomain, alias);
         if (distance === 1) {
-          return {
+          result = {
             hasMismatch: true,
             matchedBrand: brand.name,
             targetDomain: brand.primaryDomain,
             similarityType: 'TYPOSQUAT',
             explanation: `Potential brand mismatch detected: The domain '${cleanDomain}' has a 1-character difference from '${alias}' (${brand.name}), characteristic of typosquatting.`,
           };
+          brandCheckCache.set(cleanDomain, result);
+          return result;
         }
       }
     }
   }
 
-  return {
-    hasMismatch: false,
-    matchedBrand: null,
-    targetDomain: null,
-  };
+  brandCheckCache.set(cleanDomain, result);
+  return result;
 }

@@ -53,7 +53,12 @@ export function ScanPipeline({ isScanning }: ScanPipelineProps) {
   if (!isScanning) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto rounded-2xl border border-cyan-500/30 bg-[#090d16]/90 p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(0,245,255,0.15)] relative overflow-hidden">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Security threat analysis engine progress"
+      className="w-full max-w-2xl mx-auto rounded-2xl border border-cyan-500/30 bg-[#090d16]/90 p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(0,245,255,0.15)] relative overflow-hidden"
+    >
       {/* Laser line effect */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse" />
 

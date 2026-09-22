@@ -125,7 +125,7 @@ export default function ReportPage() {
                   <span className="text-orange-400 font-bold uppercase">{ind.severity} RISK</span>
                 </div>
                 <p className="text-xs italic text-amber-300/90 print:text-gray-800 font-mono">
-                  Evidence: "{ind.evidence}"
+                  Evidence: &quot;{ind.evidence}&quot;
                 </p>
                 <p className="text-xs text-slate-300 print:text-black">
                   {ind.explanation}

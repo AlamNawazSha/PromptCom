@@ -254,7 +254,7 @@ export default function HomePage() {
               Advance-Fee Hiring Scams
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Detects demands for onboarding fees, "refundable" registration deposits, mandatory paid certifications, and laptop/equipment purchases before joining.
+              Detects demands for onboarding fees, &quot;refundable&quot; registration deposits, mandatory paid certifications, and laptop/equipment purchases before joining.
             </p>
           </div>
 

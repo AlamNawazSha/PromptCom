@@ -82,6 +82,7 @@ export function DocumentScanner({ onScan, isLoading }: DocumentScannerProps) {
             type="file"
             accept=".txt,.pdf,.doc,.docx"
             onChange={handleFileChange}
+            aria-label="Upload offer letter or appointment document"
             className="hidden"
           />
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(0,245,255,0.3)] transition-all mb-4">
@@ -115,6 +116,7 @@ export function DocumentScanner({ onScan, isLoading }: DocumentScannerProps) {
             </div>
             <button
               onClick={clearFile}
+              aria-label="Remove uploaded document"
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
             >
               <X className="h-4 w-4" />

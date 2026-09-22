@@ -38,7 +38,7 @@ export function ActionRecommendations({ riskLevel, actions }: ActionRecommendati
             <span>2. INDEPENDENT VERIFICATION</span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Open the organization's official website manually in a new tab. Contact their published HR or front office phone number to verify the offer.
+            Open the organization&apos;s official website manually in a new tab. Contact their published HR or front office phone number to verify the offer.
           </p>
         </div>
 

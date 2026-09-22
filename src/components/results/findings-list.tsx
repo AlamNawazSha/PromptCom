@@ -78,7 +78,7 @@ export function FindingsList({ findings }: FindingsListProps) {
                   <span className="text-[10px] uppercase font-bold text-amber-400 block not-italic mb-0.5">
                     Extracted Evidence:
                   </span>
-                  "{finding.evidence}"
+                  &quot;{finding.evidence}&quot;
                 </div>
               )}
 

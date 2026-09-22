@@ -1,4 +1,5 @@
 import { DomainIntelResult } from '@/types';
+import { rdapCache } from '../cache/memory-cache';
 
 export interface DomainIntelProvider {
   name: string;
@@ -14,6 +15,12 @@ export class RdapIntelProvider implements DomainIntelProvider {
 
   async lookup(domain: string): Promise<Partial<DomainIntelResult>> {
     const cleanDomain = domain.toLowerCase().trim();
+
+    // Check high-speed in-memory cache
+    const cached = rdapCache.get(cleanDomain) as Partial<DomainIntelResult> | undefined;
+    if (cached) {
+      return cached;
+    }
 
     // Do not attempt RDAP for bare IP addresses or localhost
     if (/^(\d{1,3}\.){3}\d{1,3}$/.test(cleanDomain) || cleanDomain === 'localhost') {
@@ -82,12 +89,15 @@ export class RdapIntelProvider implements DomainIntelProvider {
         }
       }
 
-      return {
+      const result: Partial<DomainIntelResult> = {
         domain: cleanDomain,
         domainAgeDays,
         registrar,
         registrationDate,
       };
+
+      rdapCache.set(cleanDomain, result);
+      return result;
     } catch {
       // Graceful fallback without fabricating data
       return {

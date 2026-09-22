@@ -1,5 +1,6 @@
 import { URL } from 'url';
 import dns from 'dns/promises';
+import { dnsCache } from '../cache/memory-cache';
 
 export interface SSRFCheckResult {
   isSafe: boolean;
@@ -153,24 +154,31 @@ export async function validateSafeUrl(rawUrl: string): Promise<SSRFCheckResult> 
       };
     }
   } else {
-    // 5. DNS Resolution check to prevent DNS rebinding or internal aliases
+    // 5. DNS Resolution check with high-speed in-memory cache to prevent DNS rebinding or internal aliases
     try {
-      const addresses = await dns.lookup(hostname, { all: true });
-      for (const addr of addresses) {
-        if (addr.family === 4 && isPrivateIPv4(addr.address)) {
+      let ipAddresses = dnsCache.get(hostname);
+      if (!ipAddresses) {
+        const addresses = await dns.lookup(hostname, { all: true });
+        ipAddresses = addresses.map((a) => a.address);
+        dnsCache.set(hostname, ipAddresses);
+      }
+
+      for (const ip of ipAddresses) {
+        const isV4 = ip.includes('.');
+        if (isV4 && isPrivateIPv4(ip)) {
           return {
             isSafe: false,
             hostname,
-            ip: addr.address,
-            blockedReason: `Resolved DNS address (${addr.address}) belongs to a private network. Access blocked.`,
+            ip,
+            blockedReason: `Resolved DNS address (${ip}) belongs to a private network. Access blocked.`,
           };
         }
-        if (addr.family === 6 && isPrivateIPv6(addr.address)) {
+        if (!isV4 && isPrivateIPv6(ip)) {
           return {
             isSafe: false,
             hostname,
-            ip: addr.address,
-            blockedReason: `Resolved DNS address (${addr.address}) belongs to an internal IPv6 network. Access blocked.`,
+            ip,
+            blockedReason: `Resolved DNS address (${ip}) belongs to an internal IPv6 network. Access blocked.`,
           };
         }
       }

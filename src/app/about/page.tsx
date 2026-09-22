@@ -25,7 +25,7 @@ export default function AboutPage() {
           <span>THE CRISIS: ADVANCE-FEE & RECRUITMENT DECEPTION</span>
         </h2>
         <p className="text-sm text-slate-300 leading-relaxed">
-          Every year, millions of dollars are stolen from hopeful job candidates and apartment seekers. Scammers impersonate multinational tech corporations, dispatch counterfeit appointment letters on stolen letterhead, and demand ₹15,000 to ₹50,000 in "refundable registration deposits", "laptop courier fees", or "mandatory training clearances".
+          Every year, millions of dollars are stolen from hopeful job candidates and apartment seekers. Scammers impersonate multinational tech corporations, dispatch counterfeit appointment letters on stolen letterhead, and demand ₹15,000 to ₹50,000 in &quot;refundable registration deposits&quot;, &quot;laptop courier fees&quot;, or &quot;mandatory training clearances&quot;.
         </p>
         <p className="text-sm text-slate-300 leading-relaxed">
           Simultaneously, fake rental listings exploit housing shortages by claiming the property owner is deployed abroad, pressuring tenants to wire deposits via UPI before visiting the apartment.

@@ -114,8 +114,17 @@ export function MainScanner({ onScanComplete }: MainScannerProps) {
         <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none" />
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-4 mb-6 overflow-x-auto">
+        <div
+          role="tablist"
+          aria-label="Security Scan Input Profiles"
+          className="flex items-center gap-2 border-b border-slate-800 pb-4 mb-6 overflow-x-auto"
+        >
           <button
+            role="tab"
+            id="tab-message"
+            aria-selected={activeTab === 'MESSAGE'}
+            aria-controls="panel-message"
+            tabIndex={activeTab === 'MESSAGE' ? 0 : -1}
             onClick={() => { setActiveTab('MESSAGE'); setErrorMessage(''); }}
             className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-wider uppercase transition-all ${
               activeTab === 'MESSAGE'
@@ -128,6 +137,11 @@ export function MainScanner({ onScanComplete }: MainScannerProps) {
           </button>
 
           <button
+            role="tab"
+            id="tab-url"
+            aria-selected={activeTab === 'URL'}
+            aria-controls="panel-url"
+            tabIndex={activeTab === 'URL' ? 0 : -1}
             onClick={() => { setActiveTab('URL'); setErrorMessage(''); }}
             className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-wider uppercase transition-all ${
               activeTab === 'URL'
@@ -140,6 +154,11 @@ export function MainScanner({ onScanComplete }: MainScannerProps) {
           </button>
 
           <button
+            role="tab"
+            id="tab-document"
+            aria-selected={activeTab === 'DOCUMENT'}
+            aria-controls="panel-document"
+            tabIndex={activeTab === 'DOCUMENT' ? 0 : -1}
             onClick={() => { setActiveTab('DOCUMENT'); setErrorMessage(''); }}
             className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-wider uppercase transition-all ${
               activeTab === 'DOCUMENT'
@@ -154,7 +173,7 @@ export function MainScanner({ onScanComplete }: MainScannerProps) {
 
         {/* Error Alert if any */}
         {errorMessage && (
-          <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-mono text-rose-300">
+          <div role="alert" className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-mono text-rose-300">
             <span className="font-bold">Error:</span> {errorMessage}
           </div>
         )}
@@ -163,7 +182,11 @@ export function MainScanner({ onScanComplete }: MainScannerProps) {
         {isScanning ? (
           <ScanPipeline isScanning={isScanning} />
         ) : (
-          <div>
+          <div
+            role="tabpanel"
+            id={`panel-${activeTab.toLowerCase()}`}
+            aria-labelledby={`tab-${activeTab.toLowerCase()}`}
+          >
             {activeTab === 'MESSAGE' && (
               <MessageScanner onScan={handleMessageScan} isLoading={isScanning} />
             )}

@@ -6,6 +6,7 @@ import { ThreatScoringEngine } from '@/lib/scoring/scoring-engine';
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
 import { hashContent } from '@/lib/security/input-sanitizer';
 import { prisma } from '@/lib/db/prisma';
+import { scanResultCache } from '@/lib/cache/memory-cache';
 import { ScanResultPayload, VerificationChecklistItem, ThreatScoresBreakdown } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -52,6 +53,18 @@ export async function POST(req: NextRequest) {
     }
 
     const { url } = parseResult.data;
+    const urlHash = hashContent(url);
+
+    // Fast cache hit check
+    const cached = scanResultCache.get(urlHash) as ScanResultPayload | undefined;
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'X-Cache': 'HIT',
+          'X-Response-Time-Ms': String(Date.now() - startTime),
+        },
+      });
+    }
 
     // 2. Forensics & SSRF Analysis
     const urlAnalyzer = new UrlAnalyzer();
@@ -227,17 +240,21 @@ export async function POST(req: NextRequest) {
       verificationChecklist: checklist,
     };
 
+    scanResultCache.set(urlHash, payload);
+
     return NextResponse.json(payload, {
       headers: {
+        'X-Cache': 'MISS',
         'X-Response-Time-Ms': String(Date.now() - startTime),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string };
     console.error('URL scan error:', error);
     return NextResponse.json(
       {
         error: 'An internal error occurred while inspecting the URL.',
-        message: error?.message || 'Unknown error',
+        message: err?.message || 'Unknown error',
       },
       { status: 500 }
     );

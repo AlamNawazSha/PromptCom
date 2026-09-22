@@ -18,26 +18,32 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = React.useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
       const res = await fetch('/api/scans?limit=25');
       const data = await res.json();
       if (data.success) {
-        setMetrics(data.metrics || metrics);
+        setMetrics(data.metrics || {
+          totalScans: 0,
+          highRiskScans: 0,
+          criticalScans: 0,
+          urlScans: 0,
+          avgThreatScore: 0,
+        });
         setScans(data.scans || []);
       }
-    } catch (err: any) {
+    } catch {
       setError('Unable to load real-time telemetry. Showing cached overview.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   const handleDeleteScan = async (id: string) => {
     try {

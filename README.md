@@ -23,8 +23,9 @@ Unlike superficial AI chatbot wrappers, ScamShield AI operates a multi-layered d
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Lucide Icons, Framer Motion, Recharts
 - **Database & ORM**: Prisma ORM with SQLite (`dev.db`) for instant zero-configuration local execution (compatible with PostgreSQL in production)
 - **AI Engine**: Google Gemini API (`@google/generative-ai`) with offline rule-based fallback
-- **Security**: SSRF Guard (private IP & metadata blocklist), Sliding-window Rate Limiting, SHA-256 Privacy Hashing, Zod runtime validation
-- **Testing**: Vitest unit & integration test suite (27 automated tests)
+- **Security**: SSRF Guard (private IP & metadata blocklist), Sliding-window Rate Limiting, SHA-256 Privacy Hashing, Zod runtime validation, Enterprise CSP & HSTS Headers
+- **Performance & Efficiency**: Sub-millisecond In-Memory LRU & TTL Caching Subsystem (DNS, RDAP, Brand Intel, and Scan Payloads), O(N) Levenshtein matrix memory optimization, concurrent database aggregation
+- **Testing**: Vitest unit & integration test suite (34 automated tests across 6 test suites)
 
 ---
 
