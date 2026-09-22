@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("ANALYST")
+  createdAt DateTime @default(now())
+  scans     Scan[]
+}
+
+model Scan {
+  id                String        @id @default(cuid())
+  userId            String?
+  user              User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scanType          String        // TEXT | URL | DOCUMENT
+  threatScore       Int           // 0 - 100
+  riskLevel         String        // LOW | GUARDED | SUSPICIOUS | HIGH_RISK | CRITICAL
+  confidence        Int           // 0 - 100
+  inputHash         String
+  inputPreview      String
+  rawUrl            String?
+  domain            String?
+  aiClassification  String?
+  summary           String
+  isOfflineFallback Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  findings          ScanFinding[]
+  entities          ScanEntity[]
+  domainCheck       DomainCheck?
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([riskLevel])
+  @@index([scanType])
+  @@index([domain])
+}
+
+model ScanFinding {
+  id                String   @id @default(cuid())
+  scanId            String
+  scan              Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  category          String   // PAYMENT | JOB_SCAM | RENTAL_SCAM | URGENCY | PHISHING | URL_ANOMALY | DOMAIN_INTEL | BRAND_MISMATCH
+  severity          String   // LOW | MEDIUM | HIGH | CRITICAL
+  title             String
+  evidence          String
+  explanation       String
+  recommendedAction String
+
+  @@index([scanId])
+}
+
+model ScanEntity {
+  id         String @id @default(cuid())
+  scanId     String
+  scan       Scan   @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  entityType String // COMPANY | PERSON | JOB_TITLE | SALARY | LOCATION | EMAIL | PHONE | URL | PAYMENT_AMOUNT | PAYMENT_METHOD | UPI_ID | DEADLINE
+  value      String
+  riskScore  Int    @default(0)
+
+  @@index([scanId])
+}
+
+model DomainCheck {
+  id                    String   @id @default(cuid())
+  scanId                String   @unique
+  scan                  Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  domain                String
+  domainAgeDays         Int?
+  registrar             String?
+  registrationDate      String?
+  isHttps               Boolean  @default(true)
+  hasValidCert          Boolean  @default(true)
+  reputationScore       String?
+  isSuspiciousTld       Boolean  @default(false)
+  isPunycode            Boolean  @default(false)
+  hasExcessiveSubdomains Boolean @default(false)
+  brandMismatch         String?
+  rawRdap               String?
+}
+
+model UserSettings {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  autoAiAnalysis Boolean @default(true)
+  alertThreshold Int     @default(60)
+  theme          String  @default("cyber-dark")
+}
